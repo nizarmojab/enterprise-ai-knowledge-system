@@ -16,3 +16,15 @@ async def pdf_report(doc_id: str, file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
 
     return ingest_pdf_report(str(saved), doc_id=doc_id)
+
+from app.pipelines.ingest_index import ingest_pdf_index
+
+@router.post("/pdf-index")
+async def pdf_index(doc_id: str, file: UploadFile = File(...), source: str | None = None):
+    Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+    saved = Path(settings.UPLOAD_DIR) / f"{doc_id}_{uuid.uuid4().hex}.pdf"
+
+    with open(saved, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    return ingest_pdf_index(str(saved), doc_id=doc_id, source=source, tags=[])

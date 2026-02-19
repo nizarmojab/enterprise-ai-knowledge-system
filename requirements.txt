@@ -13,3 +13,5 @@ pytesseract
 pillow
 pdf2image
 python-multipart
+qdrant-client
+requests

@@ -1,4 +1,20 @@
+# Python
 __pycache__/
 *.pyc
-.env
+*.pyo
+*.pyd
+*.log
+
+# Virtual environment
 venv/
+.env
+
+# Data folder (important)
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Qdrant storage if ever inside project
+storage/
