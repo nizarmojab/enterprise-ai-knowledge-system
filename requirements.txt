@@ -8,3 +8,4 @@ fastapi
 uvicorn
 black
 isort
+langchain-ollama
