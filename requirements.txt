@@ -1,0 +1,10 @@
+langchain
+langchain-community
+langchain-text-splitters
+qdrant-client
+pypdf
+python-docx
+fastapi
+uvicorn
+black
+isort
