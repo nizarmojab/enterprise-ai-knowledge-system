@@ -9,3 +9,7 @@ uvicorn
 black
 isort
 langchain-ollama
+pytesseract
+pillow
+pdf2image
+python-multipart

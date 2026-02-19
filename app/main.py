@@ -1,22 +1,13 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-
-from app.core.llm import get_llm
+from app.api.ingest import router as ingest_router
 
 app = FastAPI(title="Enterprise AI Knowledge System")
+app.include_router(ingest_router)
 
-
-class AskRequest(BaseModel):
-    question: str
-
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 @app.get("/")
 def root():
-    return {"message": "Enterprise AI Knowledge System is running"}
-
-
-@app.post("/ask")
-def ask(req: AskRequest):
-    llm = get_llm()
-    resp = llm.invoke(req.question)
-    return {"answer": resp.content}
+    return {"message": "Enterprise AI Knowledge System API. Go to /docs"}
