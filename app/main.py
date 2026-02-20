@@ -14,3 +14,6 @@ def root():
 
 from app.api.query import router as query_router
 app.include_router(query_router)
+
+from app.api.analysis import router as analysis_router
+app.include_router(analysis_router)
