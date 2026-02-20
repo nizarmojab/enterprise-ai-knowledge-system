@@ -11,3 +11,6 @@ def health():
 @app.get("/")
 def root():
     return {"message": "Enterprise AI Knowledge System API. Go to /docs"}
+
+from app.api.query import router as query_router
+app.include_router(query_router)

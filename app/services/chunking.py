@@ -7,8 +7,8 @@ def chunk_page_text(
     text: str,
     extraction_type: str,
     base_metadata: dict,
-    chunk_size: int = 900,
-    chunk_overlap: int = 150,
+    chunk_size: int = 600,      # ✅ plus fin (avant 900)
+    chunk_overlap: int = 120,   # ✅ overlap adapté
 ):
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,

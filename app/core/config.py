@@ -5,7 +5,7 @@ class Settings(BaseModel):
     EMBED_MODEL: str = "nomic-embed-text"
     VISION_MODEL: str = "llava"
     QDRANT_URL: str = "http://localhost:6333"
-    QDRANT_COLLECTION: str = "docs"
+    QDRANT_COLLECTION: str = "docs_v2"
 
     OCR_LANG: str = "eng+fra"
     PDF_DPI: int = 200
