@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Enterprise AI Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin: 12px 0; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    input[type="text"] { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ccc; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #333; background: #111; color: #fff; cursor: pointer; }
+    pre { white-space: pre-wrap; margin: 0; }
+    .muted { color: #666; font-size: 13px; }
+  </style>
+</head>
+
+<body>
+  <h2>Enterprise Multimodal AI Chat</h2>
+
+  <div class="card">
+    <h3>1) Upload PDF</h3>
+    <input id="pdf" type="file" accept="application/pdf" />
+    <button onclick="uploadPdf()">Upload & Index</button>
+    <p class="muted" id="uploadStatus">No file uploaded.</p>
+  </div>
+
+  <div class="card">
+    <h3>2) Chat</h3>
+    <div id="chatBox"></div>
+
+    <div class="row">
+      <input id="msg" type="text" placeholder="Pose ta question..." />
+      <button onclick="sendMsg()">Send</button>
+    </div>
+
+    <p class="muted">Réponse basée uniquement sur le PDF chargé.</p>
+  </div>
+
+<script>
+let sessionId = null;
+let docId = null;
+
+function addMessage(role, text) {
+  const box = document.getElementById("chatBox");
+  const div = document.createElement("div");
+  div.className = "card";
+  div.innerHTML = `<b>${role}</b><pre>${escapeHtml(text)}</pre>`;
+  box.appendChild(div);
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+async function uploadPdf() {
+  const file = document.getElementById("pdf").files[0];
+  if (!file) return alert("Choisis un PDF.");
+
+  const form = new FormData();
+  form.append("file", file);
+
+  document.getElementById("uploadStatus").innerText = "Indexation en cours...";
+
+  try {
+    const res = await fetch("/chat/upload", { method: "POST", body: form });
+    const raw = await res.text();
+
+    let data = null;
+    try { data = JSON.parse(raw); } catch {}
+
+    if (!res.ok) {
+      document.getElementById("uploadStatus").innerText = "Erreur upload.";
+      addMessage("Error", `HTTP ${res.status}\n${raw}`);
+      return;
+    }
+    if (!data || !data.session_id || !data.doc_id) {
+      document.getElementById("uploadStatus").innerText = "Upload OK mais réponse inattendue.";
+      addMessage("Error", `Réponse inattendue:\n${raw}`);
+      return;
+    }
+
+    sessionId = data.session_id;
+    docId = data.doc_id;
+
+    document.getElementById("uploadStatus").innerText =
+      `OK ✅ session_id=${sessionId}, doc_id=${docId}`;
+
+  } catch (e) {
+    document.getElementById("uploadStatus").innerText = "Erreur réseau.";
+    addMessage("Error", String(e));
+  }
+}
+
+async function sendMsg() {
+  const text = document.getElementById("msg").value.trim();
+  if (!text) return;
+  if (!sessionId || !docId) return alert("Upload un PDF d'abord.");
+
+  addMessage("You", text);
+  document.getElementById("msg").value = "";
+
+  try {
+    const res = await fetch("/chat/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, doc_id: docId, message: text })
+    });
+
+    const raw = await res.text();
+    let data = null;
+    try { data = JSON.parse(raw); } catch {}
+
+    if (!res.ok) return addMessage("Error", `HTTP ${res.status}\n${raw}`);
+    if (!data) return addMessage("Error", `Réponse non-JSON:\n${raw}`);
+    if (data.error) return addMessage("Error", data.error);
+    if (!data.answer) return addMessage("Error", `Pas de champ "answer":\n${JSON.stringify(data, null, 2)}`);
+
+    let answer = data.answer;
+
+    if (Array.isArray(data.sources) && data.sources.length) {
+      const src = data.sources.map(s => {
+        const did = s.doc_id ?? "";
+        const pg = s.page ?? "";
+        const sid = s.source_id ?? "";
+        return `- ${did} p.${pg} ${sid}`.trim();
+      }).join("\n");
+      answer += "\n\nSources:\n" + src;
+    }
+
+    addMessage("Assistant", answer);
+
+  } catch (e) {
+    addMessage("Error", String(e));
+  }
+}
+
+// Optionnel: envoyer avec Enter
+document.getElementById("msg").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendMsg();
+});
+</script>
+</body>
+</html>
